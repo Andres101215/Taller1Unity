@@ -1,19 +1,30 @@
 using UnityEngine;
 
-public class CameraFollow : MonoBehaviour
+public class ThirdPersonFollow : MonoBehaviour
 {
-    // Variables públicas para asignarlas en el Inspector
-    public Transform jugador; 
-    public Vector3 compensacion = new Vector3(0, 5, -7); 
+    public Transform jugador;
+    public Vector3 offset = new Vector3(0, 5, -6);
+    public float suavizado = 5f;
+
+    private Vector3 ultimaDireccion = Vector3.forward;
 
     void LateUpdate()
     {
-        if (jugador != null)
+        Rigidbody rbJugador = jugador.GetComponent<Rigidbody>();
+
+        // Si se está moviendo, actualiza la dirección; si no, mantiene la última
+        if (rbJugador.linearVelocity.sqrMagnitude > 0.1f)
         {
-            // Modificación de la posición para seguir al objeto
-            transform.position = jugador.position + compensacion;
-            // Hace que la cámara siempre apunte hacia el jugador
-            transform.LookAt(jugador);
+            Vector3 direccionPlana = rbJugador.linearVelocity;
+            direccionPlana.y = 0; // ignora movimiento vertical (salto/caída)
+            if (direccionPlana.sqrMagnitude > 0.01f)
+                ultimaDireccion = direccionPlana.normalized;
         }
+
+        Quaternion rotacionDireccion = Quaternion.LookRotation(ultimaDireccion);
+        Vector3 posicionDeseada = jugador.position + rotacionDireccion * offset;
+
+        transform.position = Vector3.Lerp(transform.position, posicionDeseada, suavizado * Time.deltaTime);
+        transform.LookAt(jugador.position + Vector3.up * 1f);
     }
 }

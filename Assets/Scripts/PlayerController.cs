@@ -25,7 +25,15 @@ public class PlayerController : MonoBehaviour
             if (Keyboard.current.dKey.isPressed || Keyboard.current.rightArrowKey.isPressed) movimientoHorizontal = 1f;
         }
 
-        Vector3 movimiento = new Vector3(movimientoHorizontal, 0.0f, movimientoVertical);
+        // Direcciones relativas a la cámara, aplanadas (ignorando inclinación Y)
+        Vector3 camForward = Camera.main.transform.forward;
+        Vector3 camRight = Camera.main.transform.right;
+        camForward.y = 0;
+        camRight.y = 0;
+        camForward.Normalize();
+        camRight.Normalize();
+
+        Vector3 movimiento = (camForward * movimientoVertical) + (camRight * movimientoHorizontal);
         rb.AddForce(movimiento * velocidad);
     }
 
