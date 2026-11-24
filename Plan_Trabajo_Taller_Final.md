@@ -159,9 +159,13 @@ El avance 1 usa **Rigidbody + `AddForce` sobre una esfera**. Un humanoide con an
 
 ### Decisiones que siguen abiertas
 
-| # | Decisión | Por qué sigue abierta | Impacto si se demora |
+**Ninguna.** Las 10 están cerradas (D1–D9 + D1b).
+
+| # | Decisión | Elegido | Fecha |
 |---|---|---|---|
-| **D9** | Fecha de entrega | Es la que define el ritmo | No bloquea ninguna tarea técnica. Si se aprieta, define **qué se recorta**: primero sonido, después polish de ambiente; humanoide/animaciones y UI son irrenunciables |
+| **D9** | Fecha de entrega | **martes 1 de diciembre de 2026** | 2026-11-24 |
+
+> Con D9 cerrada, el plan tiene su cronograma con gates y orden de recorte (§6). **8 días naturales, 6 hábiles.** Es ajustadísimo: por eso T-A2 se resuelve en el Día 2 y no más tarde (§11).
 
 ---
 
@@ -604,21 +608,26 @@ Assets/
 
 ---
 
-### T-A2 — Reubicar y reescalar el laberinto sobre el Terrain 🔴 Crítico
+### T-A2 — Escala del laberinto sobre el Terrain 🔴 Crítico — **~1 hora, no un día**
 
-**Objetivo:** unificar la escala. **Este es el punto donde se define el tuning de movimiento de Sebastian.**
+**Objetivo:** unificar la escala. **Este es el punto donde se define el tuning de movimiento de Sebastian**, y con 8 días de plazo es la tarea que más puede hacer fracasar el plan.
 
-1. Crear un empty `PuntoInicio` (hijo de `Laberinto`) y **dibujar el recorrido** con Gizmos o con un marker en el piso, para que Sebastian sepa dónde va el jugador y dónde el portal.
-2. Mover el laberinto completo (`Laberinto`, `Contornos`, `Componentes`, `Piso*`, `Piedras`, `Gargolas`) para que quede **sobre** el Terrain y no atravesado.
-3. **Escala unificada**: la escena actual mezcla escalas (el jugador mide ~1.25 de radio con `m_LocalScale 2.5`, y la cámara está a 45 unidades). Definir **1 unidad Unity = 1 metro** y dejar:
-   - humanoid: escala **1.0**, altura **1.8 m**
-   - muros del laberinto: altura **2.5–3 m**
-   - `CharacterController`: altura 1.8, radio 0.35
-4. Reubicar los 23 prefabs de modelo (arco romano, fuente, gárgolas, rocas) con la escala y rotación coherentes con la nueva escala.
-5. **Revisar el cielo**: si el skybox es de 6 caras, la escala del cubemap define la "altura" del cielo → con una escena reescalada puede desalinearse. Ajustar el material del skybox si hace falta.
-6. Entregar a Sebastian: **la posición exacta de `PuntoInicio`** y el **recorrido** (2–3 screenshots del editor con gizmos).
+> ⚠️ **Leer §11 antes de hacer esta tarea.** El hallazgo clave: **todo el laberinto cuelga de una raíz con escala `(100, 15, 1)`**. Cambiar **dos campos de escala** en **dos raíces** reescala el laberinto entero de forma coherente. **No muevas 105 objetos a mano** — eso era el plan viejo y es lo que rompe el plazo.
 
-**Entregable:** escena coherente en escala + punto de spawn definido.
+1. **Medir (10 min, ver §11.3)**: altura de un muro y ancho de un corredor, en unidades.
+2. **Decidir la escala objetivo** con la tabla de §11.3. Preferencia: **1 unidad = 1 metro** (el humanoide a escala 1.0, `CharacterController` height 1.8 / radius 0.35 / center y 0.9).
+3. **Aplicar la escala uniforme** en las raíces:
+   - `Laberinto`: `localScale` de `(100, 15, 1)` → **valor uniforme nuevo** (ej. `(10, 10, 10)`).
+   - `Piso General`: `(50, 50, 50)` → coherente con el nuevo valor.
+   - **Esto mata dos pájaros:** fija la escala del juego **y** elimina la distorsión de la escala no uniforme, que hoy deforma muros y colliders.
+4. ⚠️ **Recordar:** cambiar la escala de la raíz **reescala también las posiciones** de los hijos (`worldPos = parentPos + parentScale × localPos`). Después de cambiar la escala, **reposicionar la raíz** para que el laberinto quede centrado sobre el Terrain.
+5. Crear un empty `PuntoInicio` (hijo de `Laberinto`) en el piso de entrada, con el **pivote en los pies** (y = 0), y otro marker `PuntoPortal` en la salida.
+6. Reubicar los 23 prefabs de modelo (arco romano, fuente, gárgolas, rocas) con escala y rotación coherentes con la nueva escala.
+7. **Revisar el cielo**: el skybox de 6 caras tiene su propia escala; con la escena reescalada puede desalinearse. Ajustar el material del skybox si hace falta.
+8. **Revisar la niebla**: `m_FogDensity: 0.01` estaba calibrado para una cámara a 45 u de altura. Con la cámara a ~2.5 u hay que recalibrarla o el laberinto se ve completamente distinto.
+9. Entregar a Sebastian: **la escala raíz definitiva**, la **posición exacta de `PuntoInicio`** y el **recorrido** (2–3 screenshots del editor con gizmos).
+
+**Entregable:** escala uniforme y coherente, punto de spawn definido, y el terreno centrado en el laberinto.
 
 ---
 
@@ -721,79 +730,106 @@ Assets/
 
 ---
 
-## 6. Secuencia y dependencias
+## 6. Cronograma — 8 días hasta la entrega
+
+> **Fecha de entrega: martes 1 de diciembre de 2026** (decisión D9, cerrada).
+> Hoy es **martes 24 de noviembre**. Quedan **8 días naturales: 6 días hábiles + el fin de semana**.
+> Este cronograma es **muy justo**: no hay holgura. Por eso hay **gates con fecha** (§6.3) y un **orden de recorte** (§6.4).
+
+### 6.1 Calendario día por día
+
+| Día | Fecha | Sebastian (código) | Andres (modelos / ambientación) | **Gate del día** |
+|---|---|---|---|---|
+| **1** | mar 24 | **T-S2** saneamiento: carpetas, tags `Jugador`/`Cristal`/`Meta`, layers, TMP. **T-S10**: bug del tag `Meta`, Lerp exponencial. Estructura de `GameManager` con eventos (datos mock) | **T-A3** Mixamo: descargar + importar humanoid, reportar altura real. **T-A1** crear Terrain y esculpir relieve | Contrato de API publicado (nombres de eventos y métodos) |
+| **2** | mié 25 | **T-S3 Fase 0+1**: prefab `Player` con `CharacterController`, movimiento con `velocity`, correr, saltar, frenar. **T-S4** `GroundChecker` + `CameraOrbit` con mouse (offset **(0, 2.5, −5)**) | **T-A2** escala: raíces del laberinto a escala **uniforme** (ver §11). **T-A4** clips `Idle`/`Walk`/`Run`/`Jump` importados | **Andres entrega la escala final + posición de `PuntoInicio`** |
+| **3** | jue 26 | **T-S3 Fase 2**: humanoide real dentro del prefab, ajustar `CharacterController`. **T-S5** Animator Controller + **diagrama Mermaid** | **T-A5** 5 cristales + portal con **dos estados visuales** (`Portal_Sellado` / `Portal_Activo`) | **Andres entrega los 5 cristales y el `Portal`** con tag y collider |
+| **4** | vie 27 | **T-S6** `GameManager` completo: puntaje D5, `GoalZone` con portal bloqueado, condición de finalización. **T-S7** UI: pantalla inicial + HUD + pantalla final (TMP) | **T-A6** encender niebla (`m_Fog: 0` → `1`), color coherente con el skybox, afinar la `Directional Light`, revisar materiales | 🚦 **GATE 1** (§6.3) |
+| **5** | sáb 28 | **T-S8** sonido: `AudioMixer` (Music −12 dB, SFX −6 dB) + `AudioDirector`. Integración general | **T-A7** props y pulido de composición. **Actualizar el PDF de entrega** (Andres es el dueño de los créditos de assets) | Primer build ejecutable funcionando |
+| **6** | dom 29 | **BÚFER.** Lo que se haya atrasado. Si no hay nada atrasado: pulir, ajustar timings, revisar la UI | Igual | 🚦 **GATE 2** — feature freeze (§6.3) |
+| **7** | lun 30 | Pruebas de §7 completas, corregir bugs. Preparar build y commit final | Pruebas visuales de §7.2. PDF de entrega final con capturas | 🚦 **GATE 3** — nada nuevo después de hoy |
+| **8** | mar 1 | Entrega: commit final, push, PR a `main`, entrega del PDF | Entrega | **Fecha de entrega** |
+
+### 6.2 Diagrama de dependencias (actualizado)
 
 ```
         ┌─────────────────────────┐
-        │  D1 / D2 / D3 decisiones│  ← 30 min, juntos
+        │  D1-D9 decisiones ✅     │  ← cerradas 2026-11-24
         └────────────┬────────────┘
                      │
         ┌────────────▼────────────┐
-        │  T-S1 contrato + rama   │
-        └────────────┬────────────┘
-                     │
-        ┌────────────▼────────────┐
-        │  T-S2 saneamiento       │  ← tags, layers, carpetas, TMP
+        │  T-S1 / T-S2 / T-S10    │  Día 1
+        │  (saneamiento + bugs)   │
         └────────────┬────────────┘
                      │
      ┌───────────────┼───────────────────┐
      │               │                   │
 ┌────▼─────┐  ┌──────▼───────┐  ┌────────▼───────┐
-│ T-A1     │  │ T-A3         │  │ T-A5           │
-│ Terrain  │  │ Humanoide    │  │ Cristales/Portal│
-└────┬─────┘  └──────┬───────┘  └────────────────┘
-     │               │
-┌────▼─────┐        │
-│ T-A2     │        │
-│ Reubicar │        │
-│ laberinto│        │
-└────┬─────┘        │
-     │               │
-     └───────┬───────┘
-             │  ← recién acá Sebastian puede cerrar el tuning
+│ T-A1     │  │ T-A3         │  │ T-A4           │
+│ Terrain  │  │ Mixamo       │  │ Clips          │
+└────┬─────┘  └──────┬───────┘  └───────┬────────┘
+     │               │                  │
+┌────▼─────┐        │                  │
+│ T-A2     │        │                  │
+│ ESCALA   │        │                  │
+│ (uniforme│        │                  │
+│  ⚠ gate) │        │                  │
+└────┬─────┘        │                  │
+     │               │                  │
+     └───────┬───────┴──────────────────┘
+             │  ← recién acá Sebastian cierra el tuning
       ┌──────▼──────────────────────┐
       │  T-S3 Player v2  (Fase 2)   │
-      │  T-S4 Ground + CameraOrbit  │
+      │  T-S4 Ground + CameraOrbit   │
       └──────┬──────────────────────┘
              │
-      ┌──────▼───────┐   ┌────────────────┐
-      │ T-S5 Animator│   │ T-A4 clips ────┘
-      │  + Diagrama  │
-      └──────┬───────┘
+      ┌──────▼────────┐   ┌────────────────┐
+      │ T-S5 Animator │◄──┤ T-A4 clips     │
+      │  + Diagrama   │   └────────────────┘
+      └──────┬────────┘
              │
       ┌──────▼──────────────────────────────────┐
-      │ T-S6 GameManager  │ T-S7 UI  │ T-S8 Sonido│
+      │ T-S6 GameManager │ T-S7 UI │ T-S8 Sonido│
       └──────┬──────────────────────────────────┘
              │
-      ┌──────▼───────┐        ┌─────────────────┐
-      │ T-A6 niebla  │        │ T-A7 props      │
-      │ e iluminación│        └─────────────────┘
-      └──────┬───────┘
+      ┌──────▼───────────┐   ┌──────────────────┐
+      │ T-A6 niebla/luz  │   │ T-A7 props       │
+      └──────┬───────────┘   └──────────────────┘
              │
       ┌──────▼──────────────────────────────────┐
       │  INTEGRACIÓN + PRUEBAS (§7)            │
-      └──────┬──────────────────────────────────┘
-             │
-      ┌──────▼──────────────────────────────────┐
-      │  T-S10 bugs + checklist de entrega (§8) │
       └─────────────────────────────────────────┘
 ```
 
-**Tablero deKanban sugerido** (una columna por estado, un post-it por tarea):
+### 6.3 Gates con fecha — reglas de corte
 
-| Para hacer | Bloqueado por | Responsable |
-|---|---|---|
-| T-S1, T-S2 | — | Sebastian |
-| T-A1, T-A2 | D2 cerrada | Andres |
-| T-A3, T-A4 | D3 cerrada | Andres |
-| T-A5 | D1 cerrada + T-A2 (para ubicar en el laberinto) | Andres |
-| T-S3, T-S4 | T-A2 (escala) + T-A3 (modelo) | Sebastian |
-| T-S5 | T-A4 (clips) | Sebastian |
-| T-S6, T-S7, T-S8 | T-S2 (tags/layers) | Sebastian |
-| T-A6, T-A7 | T-A1, T-A2 | Andres |
-| Integración | todo | ambos |
+Un gate no es una sugerencia. **Si el gate no se cumple, se recorta alcance, no se recorta tiempo.**
 
-> **Regla de trabajo en pareja:** cada **martes y jueves** una sesión de 45 min de integración (juntos, con el Editor abierto). Es más barato que integrar al final. Durante esas sesiones se revisan los posts de "hecho" y se decide si algo se puede destrabar.
+| Gate | Fecha | Condición | Si no se cumple |
+|---|---|---|---|
+| **GATE 1** | **vie 27 fin de día** | El humanoide se mueve con `CharacterController`, la animación responde (idle/walk/run/jump), y las 3 pantallas de UI existen con valores en vivo | **Se abandona el polish**:Props, transiciones de UI, `Impactos:` en el HUD, sonido de impacto. **Nunca** humanoide, animación, UI ni puntaje |
+| **GATE 2** | **dom 29** | Feature freeze: no se agregan features, solo se corrigen bugs | Si hay features a medias, se **deshacen o se docentran** ("próximamente"). Una feature a medio hacer se ve peor que ausente |
+| **GATE 3** | **lun 30** | Todo commiteado, build ejecutable, PDF de entrega actualizado, `git status` limpio | Nada nuevo se escribe a partir de este momento. El lunes es de cierre, no de trabajo |
+
+### 6.4 Orden de recorte (si se atrasan)
+
+**Recortar de abajo hacia arriba.** Cada nivel es menos valioso que el anterior:
+
+| Nivel | Qué se cae | % de rúbrica | Horas ahorradas (est.) |
+|---|---|---|---|
+| 1 | T-A7 props y pulido de composición | ~0 (solo afecta "estilo") | 3–4 h |
+| 2 | `SFX_Impacto` y `Impactos:` en el HUD | 0 | 0.5 h |
+| 3 | Sonido ambiente (queda solo 1 SFX de evento) | 2 % | 1–2 h |
+| 4 | Blur / transiciones entre pantallas de UI | 0 | 1 h |
+| 5 | Detalle de niebla y color del skybox | 2 % | 1 h |
+
+> ⛔ **Nunca se recortan** (son 38 % de la nota y son el corazón del taller): humanoide + animaciones (20 %), diagrama del Animator (10 %), UI/puntaje (8 %), y el control con saltar/correr/mouse (10 %).
+> ⛔ **Y nunca se recorta la §1** (terreno + fog + iluminación): es 10 % y son 3 horas de trabajo.
+
+### 6.5 Regla de trabajo en pareja
+
+- **Sesión diaria de 20 min** (fin del día de trabajo, por videollamada o presencial): cada uno dice en 3 minutos qué salió, qué se bloqueó y qué necesita del otro **antes de mañana**. Es el seguro más barato posible contra el bloqueo de la ruta crítica.
+- **El que bloquea, avisa en la sesión diaria, no cuando ya venció.** Un bloqueo de medio día se multiplica por los días que quedan.
+- **Commit por tarea, no por día.** Si hay que volver atrás, se pierde una tarea, no una semana.
 
 ---
 
@@ -945,12 +981,77 @@ Rango esperado: ~600–900. Conecta dos criterios rúbrica: la colisión (§5) q
 
 ### Abiertas ⬜
 
-| # | Decisión | Alternativas | Elegido | Quién decide | Impacto |
-|---|---|---|---|---|---|
-| **D9** | Fecha de entrega | | | — | Define el ritmo del plan. Sin esto no se pueden dimensionar los cortes de trabajo |
+**Ninguna.** Las 10 decisiones están cerradas (D1–D9 + D1b).
 
-> **Sólo queda D9.** No bloquea ninguna tarea técnica: es la que define el ritmo y, si se aprieta, **qué se recorta**. El orden de recorte ya está decidido: primero **sonido** (5 %), después **polish de ambiente** (props, T-A7), antes que humanoide/animaciones (20 %) o UI (8 %), que son irrenunciables.
+| # | Decisión | Elegido | Fecha |
+|---|---|---|---|
+| **D9** | Fecha de entrega | **martes 1 de diciembre de 2026** | 2026-11-24 |
+
+> Con D9 cerrada, el plan tiene su cronograma (§6) con gates y orden de recorte. **8 días naturales, 6 hábiles.** Es ajustadísimo: por eso T-A2 (escala) se resuelve en el Día 2 y no más tarde — bloquea el tuning de movimiento de Sebastian.
 
 ---
 
-*Documento generado el 2026-11-24 sobre el commit `481714e` (avance 1). Decisiones D1–D8 y D1b cerradas el 2026-11-24; sólo queda abierta D9 (fecha de entrega). Actualizar la sección 1 si el proyecto cambia.*
+## 11. Escala y cámara: la corrección que hace viable el plazo
+
+> Esta sección salió de una medición directa del YAML de la escena (no de una inspección visual) y **cambia el plan de la ruta crítica**. Léela antes de empezar el Día 2.
+
+### 11.1 Lo que se midió
+
+| Métrica | Valor | Lectura |
+|---|---|---|
+| Extensión de la escena | **X 204→346, Z −9→120** (≈ 142 × 130 unidades) | El laberinto mide ~142 × 130 unidades |
+| Jugador (avance 1) | Esfera, `SphereCollider` radio 0.5, instancia con `localScale` 2.5 → **radio real 1.25 u** | La bola tiene 2.5 u de diámetro |
+| Offset de cámara | **(0, 45, −45)** | La cámara está a **45 u** de distancia y **45 u** de altura |
+| Raíz `Laberinto` | `localScale` = **(100, 15, 1)** | ⚠️ **Escala no uniforme** |
+| Raíz `Piso General` | `localScale` = **(50, 50, 50)** | Uniforme, ok |
+| Raíz `Laberinto` | `localScale` = (100, 15, 1) en un hijo de `Componentes` | ⚠️ Distorsiona a todos sus hijos |
+
+### 11.2 Los dos hallazgos
+
+**A. La cámara del avance 1 está calibrada para una vista aérea, no para un humanoide.**
+
+45 unidades de distancia con una bola de 2.5 u de diámetro = cámara a **18× el diámetro del jugador**. Eso no es una cámara en tercera persona: es una vista de laberinto desde arriba. Es exactamente lo que muestra el screenshot del PDF de entrega, y **funciona** para una bola — pero con un humanoide de 1.8 u sería una cámara a 25× su altura: verías el laberinto entero desde un drone, y la animación del personaje sería microscopicamente ilegible.
+
+> **Consecuencia directa:** el offset de cámara hay que pasarlo de `(0, 45, −45)` a algo como **`(0, 2.5, −5)`**, y `suavizado` a decaimiento exponencial (T-S4). Es un cambio de **una línea en la escena**, no una tarea. Pero si se olvida, el juego se ve como el avance 1 con un muñeco en vez de una bola — y eso rompe el 10 % de "movimiento y entradas" y el de "humanoide".
+
+**B. Las raíces con escala no uniforme son un defecto real, y la buena noticia es que arreglarlo es barato.**
+
+`Laberinto` con `localScale = (100, 15, 1)`:
+- Deforma a todos sus hijos (los muros y su `MeshCollider` quedan con proporciones alteradas).
+- Hace la física impredecible: los `BoxCollider` y `MeshCollider` heredan esa escala.
+- Pero **es también la palanca**: si todo el laberinto cuelga de una raíz, **cambiar la escala de esa raíz reescala todo el laberinto de forma coherente, en un solo campo**, en vez de tocar 105 objetos.
+
+### 11.3 El protocolo de medición (10 minutos, en el Editor, Día 2)
+
+Esto NO se puede decidir desde el YAML con exactitud — hay que medirlo en el Editor, en el orden indicado. **Andres lo hace primero, antes de tocar nada.**
+
+1. Seleccionar un **muro** del laberinto → `Inspector → Box Collider → Size` y `Transform → Scale`.
+   - Anotar: **altura del muro** y **ancho del corredor** (distancia entre dos muros opuestos).
+2. Seleccionar un **hueco de paso** entre dos muros → medir en unidades.
+3. **Decidir la escala objetivo** con esta tabla:
+
+   | Si el corredor mide… | Entonces 1 unidad vale | El humanoide va a escala | `CharacterController` |
+   |---|---|---|---|
+   | ~3–4 u | 1 m | **1.0** (1.8 u = 1.8 m) | height 1.8, radius 0.35, center y 0.9 |
+   | ~30–40 u | 0.1 m | **0.1** | height 0.18, radius 0.035, center y 0.09 |
+   | ~8–12 u | 0.25 m | **0.25** | height 0.45, radius 0.09, center y 0.22 |
+
+   > ⚠️ **Preferencia: la primera fila.** Trabajar con `CharacterController` de altura 1.8 y radio 0.35 es lo estándar y lo que uno encuentra en cualquier tutorial. Trabajar con height 0.18 es una pesadilla de depuración.
+   >
+   > Si el corredor mide 30–40 u, la opción no es achicar el humanoide a 0.1: es **achicar el laberinto**. Y como todo cuelga de `Laberinto` con `localScale = (100, 15, 1)`, eso se hace **poniendo un valor uniforme nuevo en ese campo** — por ejemplo `(10, 10, 10)` en lugar de `(100, 15, 1)`.
+   >
+   > ⚠️ **Cuidado:** cambiar la escala de la raíz **reescala también la posición** de los hijos (en Unity, `worldPos = parentPos + parentScale × localPos`). Por eso hay que mover la raíz a la posición correcta después, o dejar que el Terrain se centre en el laberinto.
+
+4. **Corregir la escala no uniforme** en el mismo paso: poner `(10, 10, 10)` (o el valor que salga de la tabla) en vez de `(100, 15, 1)`. Esto **de una vez** elimina la distorsión y fija la escala del juego.
+5. Recién después, Sebastian ajusta el `CharacterController` con los valores de la tabla, y ambos ajustan el offset de cámara a `(0, 2.5, −5)`.
+
+### 11.4 Lo que cambia en el plan por este hallazgo
+
+- **T-A2 pasa de "reubicar y reescalar 105 objetos a mano" a "cambiar 2 campos de escala en 2 raíces"**. De medio día a **una hora**. Es la diferencia entre que el plan sea viable o no en 8 días.
+- **T-S3 Fase 2 deja de depender de un reescalado masivo**: Sebastian solo ajusta el `CharacterController` y la cámara.
+- **Se agrega al gate del Día 2**: "escala uniforme + escala objetivo decidida" — es lo que desbloquea todo lo demás.
+- La niebla (`m_FogDensity: 0.01`) también hay que revisarla: con la cámara a 45 u la niebla era imperceptible; a 2.5 u de altura hay que ajustarla o la visibilidad del laberinto cambia por completo.
+
+---
+
+*Documento generado el 2026-11-24 sobre el commit `481714e` (avance 1). Las 10 decisiones (D1–D9 + D1b) están cerradas. Cronograma de 8 días hasta el martes 1 de diciembre de 2026. Commit `dbffaa8` en la rama `feature/taller-final`.*
