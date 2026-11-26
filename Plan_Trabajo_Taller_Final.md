@@ -850,7 +850,19 @@ Un gate no es una sugerencia. **Si el gate no se cumple, se recorta alcance, no 
 
 ### 6.6 Tareas del Editor (no se pueden hacer desde el código)
 
-> Todo lo que necesita la GUI de Unity. **En orden**, porque cada una depende de la anterior.
+> **Actualización 2026-11-26: los pasos E2, E3 y parte de E5 se automatizaron.** Hay un script de editor en `Assets/Editor/TallerFinalSetup.cs` con un menú **Taller Final** en la barra de Unity:
+>
+> | Menú | Qué hace |
+> |---|---|
+> | **1. Reconstruir prefab Player** | Quita `Rigidbody` y `SphereCollider`, pone el tag `Jugador`, resetea la escala a 1, deja el `CharacterController` en 1.8 / 0.35 / center 0.9, importa el humanoide de `Assets/Models/Player` como hijo **`Model`**, y le pone `Animator` + `PlayerAnimationDriver` |
+> | **2. Crear Animator Controller y diagrama** | Crea `Assets/Animations/Player.controller` con los parámetros `Speed` / `Grounded` / `Jump`, los estados `Idle` / `Locomotion` (blend tree) / `Jump` y las transiciones. **Y genera el diagrama Mermaid desde ese controller** |
+> | **3. Corregir camara e instancia en escena** | Resetea la escala del jugador a 1, pone el tag, y deja la cámara con `offset (0, 2.5, -5)` apuntando al jugador |
+> | **4. Chequeo rapido (reporte)** | Imprime en la consola el estado de todo: prefab, componentes, animator, clips faltantes, escala de la instancia, offset de cámara. **Es el checklist del GATE 1 automatizado** |
+> | **5. Generar diagrama de animaciones** | Regenera `Docs/Diagrama_Animaciones.md` desde el controller |
+>
+> **El diagrama se genera desde el Animator Controller, no se escribe a mano.** Eso garantiza por construcción el *"debe coincidir con la implementación"* que pide la rúbrica (10 %).
+>
+> Orden recomendado: **1 → 2 → 3 → 4**. Volver a correr **1** cada vez que Andres entregue un asset nuevo (cambia el modelo, cambian los clips).
 
 **E1 — Importar las Essential Resources de TextMeshPro** (una sola vez)
 `Window → TextMeshPro → Import TMP Essential Resources` → *Import TMP Essentials* en la carpeta `Assets/TextMesh Pro/`.
@@ -868,9 +880,12 @@ Un gate no es una sugerencia. **Si el gate no se cumple, se recorta alcance, no 
 8. Verificar que el pivote del modelo esté **en los pies**. Si el humanoide mide otra cosa que 1.8 m, ajustar `Height`/`Radius`/`Center` del `CharacterController` — **nunca la escala del modelo**.
 9. Borrar la malla de esfera y el material viejo.
 
+> ⚠️ **La escala del jugador.** El `CharacterController` **hereda la escala del GameObject**. La instancia del avance 1 tiene `localScale = 2.5`, así que el personaje quedaría con un capsule de **4.5 m** y el humanoide de Mixamo mide **4.5 m** en vez de 1.8. **La escala tiene que quedar en 1,1,1.** El menú item 1 y el 3 lo hacen.
+
 **E3 — Crear el Animator Controller**
 `Assets/Animations/Player.controller` (ver T-S5 para los parámetros, estados y transiciones exactos).
 Parámetros: `Speed` (float), `Grounded` (bool), `Jump` (trigger).
+> Automatizado con el menú item **2**.
 
 **E4 — Crear el prefab de UI**
 `Assets/Prefabs/UI/GameHUD.prefab`:
