@@ -5,6 +5,9 @@ TagManager:
   serializedVersion: 3
   tags:
   - Muro
+  - Jugador
+  - Cristal
+  - Meta
   layers:
   - Default
   - TransparentFX
@@ -14,10 +17,10 @@ TagManager:
   - UI
   - 
   - 
-  - 
-  - 
-  - 
-  - 
+  - Jugador
+  - Suelo
+  - Muro
+  - Entorno
   - 
   - 
   - 

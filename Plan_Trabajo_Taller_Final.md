@@ -165,7 +165,7 @@ El avance 1 usa **Rigidbody + `AddForce` sobre una esfera**. Un humanoide con an
 |---|---|---|---|
 | **D9** | Fecha de entrega | **martes 1 de diciembre de 2026** | 2026-11-24 |
 
-> Con D9 cerrada, el plan tiene su cronograma con gates y orden de recorte (§6). **8 días naturales, 6 hábiles.** Es ajustadísimo: por eso T-A2 se resuelve en el Día 2 y no más tarde (§11).
+> Con D9 cerrada, el plan tiene su cronograma con gates y orden de recorte (§6). **5 días naturales, 3 hábiles.** Es ajustadísimo: por eso T-A2 (escala) se resuelve en el Día 4 y no más tarde (§11).
 
 ---
 
@@ -610,7 +610,7 @@ Assets/
 
 ### T-A2 — Escala del laberinto sobre el Terrain 🔴 Crítico — **~1 hora, no un día**
 
-**Objetivo:** unificar la escala. **Este es el punto donde se define el tuning de movimiento de Sebastian**, y con 8 días de plazo es la tarea que más puede hacer fracasar el plan.
+**Objetivo:** unificar la escala. **Este es el punto donde se define el tuning de movimiento de Sebastian**, y con 5 días de plazo es la tarea que más puede hacer fracasar el plan.
 
 > ⚠️ **Leer §11 antes de hacer esta tarea.** El hallazgo clave: **todo el laberinto cuelga de una raíz con escala `(100, 15, 1)`**. Cambiar **dos campos de escala** en **dos raíces** reescala el laberinto entero de forma coherente. **No muevas 105 objetos a mano** — eso era el plan viejo y es lo que rompe el plazo.
 
@@ -730,24 +730,47 @@ Assets/
 
 ---
 
-## 6. Cronograma — 8 días hasta la entrega
+## 6. Cronograma — 5 días hasta la entrega
 
 > **Fecha de entrega: martes 1 de diciembre de 2026** (decisión D9, cerrada).
-> Hoy es **martes 24 de noviembre**. Quedan **8 días naturales: 6 días hábiles + el fin de semana**.
-> Este cronograma es **muy justo**: no hay holgura. Por eso hay **gates con fecha** (§6.3) y un **orden de recorte** (§6.4).
+> **Estado real al jueves 26 de noviembre:** los Días 1 y 2 (24 y 25) **no se trabajaron**. Quedan **5 días naturales: 3 hábiles + el fin de semana**.
+> Consecuencia: el plan original de 8 días **no entra**. Se comprimió lo que se puede comprimir (todo el código quedó hecho, §6.0) y **se recortó alcance** (§6.4).
 
-### 6.1 Calendario día por día
+### 6.0 Estado de implementación al 26 de noviembre
 
-| Día | Fecha | Sebastian (código) | Andres (modelos / ambientación) | **Gate del día** |
+**Código: COMPLETO y compilando.** Los 12 scripts de gameplay están escritos y verificados con el compilador de Unity (Roslyn contra las DLLs reales del proyecto → compilación limpia, sin warnings).
+
+| Script | Estado | Qué aporta |
+|---|---|---|
+| `Scripts/Player/PlayerController.cs` | ✅ | `CharacterController`, correr, saltar, frenar, movimiento relativo a cámara, `OnControllerColliderHit` |
+| `Scripts/Player/GroundChecker.cs` | ✅ | Detección de suelo por `SphereCast`, excluye la layer `Jugador` |
+| `Scripts/Player/PlayerAnimationDriver.cs` | ✅ | Alimenta `Speed` / `Grounded` / `Jump` del Animator |
+| `Scripts/Camera/CameraOrbit.cs` | ✅ | Órbita con mouse, suavizado exponencial, cursor lock |
+| `Scripts/Game/GameManager.cs` | ✅ | Estados `Intro/Playing/Finished`, puntaje D5, eventos |
+| `Scripts/Game/GoalZone.cs` | ✅ | Portal bloqueado con dos estados visuales |
+| `Scripts/Game/Collectible.cs` | ✅ | Recogida de cristales |
+| `Scripts/Game/TagUtil.cs` | ✅ | Busca el tag en la jerarquía (muros de modelos importados) |
+| `Scripts/UI/StartScreen.cs` | ✅ | Pantalla inicial |
+| `Scripts/UI/HUDController.cs` | ✅ | HUD por eventos (puntaje, cristales, tiempo, impactos) |
+| `Scripts/UI/EndScreen.cs` | ✅ | Pantalla final |
+| `Scripts/Audio/AudioDirector.cs` | ✅ | Música + 5 SFX de evento |
+| `TagManager.asset` | ✅ | Tags `Jugador`/`Cristal`/`Meta`/`Muro`; layers `Jugador`/`Suelo`/`Muro`/`Entorno` |
+| Estructura de carpetas | ✅ | Las 14 carpetas de §3.2, con sus `.meta` |
+
+**Lo que falta y hay que hacer en el Editor** (§6.6): reconstruir el prefab `Player`, crear el Animator Controller, crear el prefab de UI, importar TMP, y los assets de Andres.
+
+### 6.1 Calendario — 5 días reales
+
+| Día | Fecha | Sebastian (código) | Andres (modelos / ambientación) | **Gate** |
 |---|---|---|---|---|
-| **1** | mar 24 | **T-S2** saneamiento: carpetas, tags `Jugador`/`Cristal`/`Meta`, layers, TMP. **T-S10**: bug del tag `Meta`, Lerp exponencial. Estructura de `GameManager` con eventos (datos mock) | **T-A3** Mixamo: descargar + importar humanoid, reportar altura real. **T-A1** crear Terrain y esculpir relieve | Contrato de API publicado (nombres de eventos y métodos) |
-| **2** | mié 25 | **T-S3 Fase 0+1**: prefab `Player` con `CharacterController`, movimiento con `velocity`, correr, saltar, frenar. **T-S4** `GroundChecker` + `CameraOrbit` con mouse (offset **(0, 2.5, −5)**) | **T-A2** escala: raíces del laberinto a escala **uniforme** (ver §11). **T-A4** clips `Idle`/`Walk`/`Run`/`Jump` importados | **Andres entrega la escala final + posición de `PuntoInicio`** |
-| **3** | jue 26 | **T-S3 Fase 2**: humanoide real dentro del prefab, ajustar `CharacterController`. **T-S5** Animator Controller + **diagrama Mermaid** | **T-A5** 5 cristales + portal con **dos estados visuales** (`Portal_Sellado` / `Portal_Activo`) | **Andres entrega los 5 cristales y el `Portal`** con tag y collider |
-| **4** | vie 27 | **T-S6** `GameManager` completo: puntaje D5, `GoalZone` con portal bloqueado, condición de finalización. **T-S7** UI: pantalla inicial + HUD + pantalla final (TMP) | **T-A6** encender niebla (`m_Fog: 0` → `1`), color coherente con el skybox, afinar la `Directional Light`, revisar materiales | 🚦 **GATE 1** (§6.3) |
-| **5** | sáb 28 | **T-S8** sonido: `AudioMixer` (Music −12 dB, SFX −6 dB) + `AudioDirector`. Integración general | **T-A7** props y pulido de composición. **Actualizar el PDF de entrega** (Andres es el dueño de los créditos de assets) | Primer build ejecutable funcionando |
-| **6** | dom 29 | **BÚFER.** Lo que se haya atrasado. Si no hay nada atrasado: pulir, ajustar timings, revisar la UI | Igual | 🚦 **GATE 2** — feature freeze (§6.3) |
-| **7** | lun 30 | Pruebas de §7 completas, corregir bugs. Preparar build y commit final | Pruebas visuales de §7.2. PDF de entrega final con capturas | 🚦 **GATE 3** — nada nuevo después de hoy |
-| **8** | mar 1 | Entrega: commit final, push, PR a `main`, entrega del PDF | Entrega | **Fecha de entrega** |
+| **3** | **jue 26** *(hoy)* | ✅ **Código completo y compilando** (tabla de arriba). Rebuilder el prefab `Player` en el Editor | **T-A3** Mixamo: descargar + importar humanoid. **T-A4** clips. **T-A1** Terrain + relieve | Assets del humanoide en el repo |
+| **4** | vie 27 | Montar el prefab `Player` con el humanoide, `CharacterController` y `Animator`. **T-S5** Animator Controller + **diagrama Mermaid**. **T-S7** prefab de UI con TMP | **T-A2** escala uniforme del laberinto (§11). **T-A5** 5 cristales + portal con 2 estados | 🚦 **GATE 1** — humanoide animado + UI con valores en vivo |
+| **5** | sáb 28 | Integración: conectar `GameManager`, `GoalZone`, `Collectible`, UI y audio en la escena. **T-S8** `AudioMixer` + clips | **T-A6** niebla + iluminación + materiales de UI | Primer build jugable de punta a punta |
+| **6** | dom 29 | **BÚFER.** Si no hay atraso: pulir, ajustar la cámara, revisar la UI | Igual. **Actualizar el PDF de entrega** | 🚦 **GATE 2** — feature freeze |
+| **7** | lun 30 | Pruebas de §7, corregir bugs, preparar build y commit final | Pruebas visuales §7.2. PDF final con capturas | 🚦 **GATE 3** — nada nuevo después de hoy |
+| **8** | mar 1 | Entrega: commit, push, PR a `main`, entrega del PDF | Entrega | **Fecha de entrega** |
+
+> **El código está listo, así que el día 26 no se pierde en scripting.** Lo que bloquea ahora es **asset**: sin el modelo de Mixamo de Andres, el 20 % de la rúbrica (humanoide + animaciones + diagrama) queda en cero. **Es la prioridad número uno.**
 
 ### 6.2 Diagrama de dependencias (actualizado)
 
@@ -825,7 +848,51 @@ Un gate no es una sugerencia. **Si el gate no se cumple, se recorta alcance, no 
 > ⛔ **Nunca se recortan** (son 38 % de la nota y son el corazón del taller): humanoide + animaciones (20 %), diagrama del Animator (10 %), UI/puntaje (8 %), y el control con saltar/correr/mouse (10 %).
 > ⛔ **Y nunca se recorta la §1** (terreno + fog + iluminación): es 10 % y son 3 horas de trabajo.
 
-### 6.5 Regla de trabajo en pareja
+### 6.6 Tareas del Editor (no se pueden hacer desde el código)
+
+> Todo lo que necesita la GUI de Unity. **En orden**, porque cada una depende de la anterior.
+
+**E1 — Importar las Essential Resources de TextMeshPro** (una sola vez)
+`Window → TextMeshPro → Import TMP Essential Resources` → *Import TMP Essentials* en la carpeta `Assets/TextMesh Pro/`.
+> Sin esto, los `TMP_Text` de la UI salen con el sprite de "missing font" y la pantalla queda inservible.
+
+**E2 — Reconstruir el prefab `Player`** ⚠️ **el más importante**
+`Assets/Prefabs/Player/Player.prefab`:
+1. Arrastrar el humanoide de Mixamo como **hijo** del root `Player`. Nombre del hijo: **`Model`**.
+2. En el root `Player`: tag **`Jugador`**.
+3. En el root `Player`: **agregar `CharacterController`** → `Height 1.8`, `Radius 0.35`, `Center (0, 0.9, 0)`, `Step Offset 0.3`, `Slope Limit 45`.
+4. En el root `Player`: **quitar el `Rigidbody`** y **quitar el `SphereCollider`** de la esfera. *(Un Rigidbody y un CharacterController en el mismo objeto se pelean.)*
+5. En el root `Player`: agregar `PlayerController`, `GroundChecker` (ya se auto-agrega por `RequireComponent`).
+6. En el hijo `Model`: agregar **`PlayerAnimationDriver`** y asignarle el `Animator` del modelo.
+7. En el hijo `Model`: asignar el `Animator` con el `Controller` (E3).
+8. Verificar que el pivote del modelo esté **en los pies**. Si el humanoide mide otra cosa que 1.8 m, ajustar `Height`/`Radius`/`Center` del `CharacterController` — **nunca la escala del modelo**.
+9. Borrar la malla de esfera y el material viejo.
+
+**E3 — Crear el Animator Controller**
+`Assets/Animations/Player.controller` (ver T-S5 para los parámetros, estados y transiciones exactos).
+Parámetros: `Speed` (float), `Grounded` (bool), `Jump` (trigger).
+
+**E4 — Crear el prefab de UI**
+`Assets/Prefabs/UI/GameHUD.prefab`:
+- `Canvas` (Screen Space - Overlay) + `CanvasScaler` (Scale With Screen Size, 1920×1080).
+- 3 paneles: `StartScreen` (título *"EL LABERINTO DE LA GÁRGOLA"*, objetivo, controles, *"Presione una tecla para comenzar"*), `HUD` (puntaje, cristales, tiempo, impactos), `EndScreen` (misión completada + resultados).
+- Asignar los `TMP_Text` a los campos de `StartScreen` / `HUDController` / `EndScreen`.
+- Agregar un `GameManager` vacío a la escena con el `totalCrystals = 5`.
+
+**E5 — Armar la escena**
+- Reemplazar el antiguo grupo `Meta` (4 triggers del avance 1) por el `Portal` único.
+- Instanciar los 5 `Cristal_01`…`Cristal_05` con el tag `Cristal` y collider Trigger.
+- Poner el `GoalZone` en el `Portal` con sus dos materiales y la luz.
+- Quitar el script viejo de la cámara y poner `CameraOrbit` con `offset (0, 2.5, -5)`.
+
+**E6 — Cambios de configuración**
+- `ProjectSettings → Player → Active Input Handling` = **Input System Package (New)** (ya lo está).
+- `Audio → AudioMixer` con grupos `Master` / `Music` (−12 dB) / `SFX` (−6 dB).
+- `Window → Rendering → Lighting → Environment → Other Settings → Fog` = **Linear**, con el color del cielo.
+
+---
+
+### 6.7 Regla de trabajo en pareja
 
 - **Sesión diaria de 20 min** (fin del día de trabajo, por videollamada o presencial): cada uno dice en 3 minutos qué salió, qué se bloqueó y qué necesita del otro **antes de mañana**. Es el seguro más barato posible contra el bloqueo de la ruta crítica.
 - **El que bloquea, avisa en la sesión diaria, no cuando ya venció.** Un bloqueo de medio día se multiplica por los días que quedan.
@@ -987,7 +1054,7 @@ Rango esperado: ~600–900. Conecta dos criterios rúbrica: la colisión (§5) q
 |---|---|---|---|
 | **D9** | Fecha de entrega | **martes 1 de diciembre de 2026** | 2026-11-24 |
 
-> Con D9 cerrada, el plan tiene su cronograma (§6) con gates y orden de recorte. **8 días naturales, 6 hábiles.** Es ajustadísimo: por eso T-A2 (escala) se resuelve en el Día 2 y no más tarde — bloquea el tuning de movimiento de Sebastian.
+> Con D9 cerrada, el plan tiene su cronograma (§6) con gates y orden de recorte. **5 días naturales, 3 hábiles.** Es ajustadísimo: por eso T-A2 (escala) se resuelve en el Día 4 y no más tarde — bloquea el tuning de movimiento de Sebastian.
 
 ---
 
@@ -1047,11 +1114,11 @@ Esto NO se puede decidir desde el YAML con exactitud — hay que medirlo en el E
 
 ### 11.4 Lo que cambia en el plan por este hallazgo
 
-- **T-A2 pasa de "reubicar y reescalar 105 objetos a mano" a "cambiar 2 campos de escala en 2 raíces"**. De medio día a **una hora**. Es la diferencia entre que el plan sea viable o no en 8 días.
+- **T-A2 pasa de "reubicar y reescalar 105 objetos a mano" a "cambiar 2 campos de escala en 2 raíces"**. De medio día a **una hora**. Es la diferencia entre que el plan sea viable o no con 5 días.
 - **T-S3 Fase 2 deja de depender de un reescalado masivo**: Sebastian solo ajusta el `CharacterController` y la cámara.
 - **Se agrega al gate del Día 2**: "escala uniforme + escala objetivo decidida" — es lo que desbloquea todo lo demás.
 - La niebla (`m_FogDensity: 0.01`) también hay que revisarla: con la cámara a 45 u la niebla era imperceptible; a 2.5 u de altura hay que ajustarla o la visibilidad del laberinto cambia por completo.
 
 ---
 
-*Documento generado el 2026-11-24 sobre el commit `481714e` (avance 1). Las 10 decisiones (D1–D9 + D1b) están cerradas. Cronograma de 8 días hasta el martes 1 de diciembre de 2026. Commit `dbffaa8` en la rama `feature/taller-final`.*
+*Documento generado el 2026-11-24 sobre el commit `481714e` (avance 1). Las 10 decisiones (D1–D9 + D1b) están cerradas. Cronograma comprimido a **5 días** (revisado el 2026-11-26, con el código de gameplay completo y compilando). Rama `feature/taller-final`.*
